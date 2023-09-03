@@ -13,28 +13,31 @@ spec:
     app: nginx
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: web
+  name: nginx-deployment
+  labels:
+    app: web
 spec:
   selector:
     matchLabels:
-      app: nginx # has to match .spec.template.metadata.labels
-  serviceName: "nginx"
-  replicas: 3 # by default is 1
-  minReadySeconds: 10 # by default is 0
+      app: web
+  replicas: 5
+  strategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
-        app: nginx # has to match .spec.selector.matchLabels
+        app: web
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
-     —name: nginx
-        image: k8s.gcr.io/nginx-slim:0.8
-        ports:
-       —containerPort: 80
-          name: web
-        volumeMounts:
-       —name: www
-          mountPath: /usr/share/nginx/html
+       —name: nginx
+          image: nginx
+          ports:
+           —containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
